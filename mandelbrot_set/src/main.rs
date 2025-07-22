@@ -1,3 +1,4 @@
+mod my_draw;
 use piston_window::*;
 
 struct App {
@@ -5,27 +6,28 @@ struct App {
     y: f64,
 }
 
+
 fn main() {
     let mut window: PistonWindow = WindowSettings::new("Mondelbrot Set", [800, 600])
         .exit_on_esc(true)
         .build()
         .unwrap();
 
-    let mut app = App { x: 400.0, y: 300.0 };
+    let app = App { x: 400.0, y: 300.0 };
+    let mut k = 1;
 
+    let mut z = my_draw::get_n_for_pixel(0.0, 0.0, k);
+    println!("Initial z value: {}", z);
     while let Some(e) = window.next() {
         // Keyboard input handling
         if let Some(Button::Keyboard(key)) = e.press_args() {
             match key {
-                Key::Up => app.y -= 10.0,
-                Key::Down => app.y += 10.0,
-                Key::Left => app.x -= 10.0,
-                Key::Right => app.x += 10.0,
+                Key::Up => k+=1,
+                Key::Down => k-=1,
                 _ => {}
             }
 
-            println!("Координаты квадрата: ({}, {})", app.x, app.y);
-
+            println!("Square position: ({}, {})", app.x, app.y);
         }
 
 
@@ -34,7 +36,7 @@ fn main() {
             clear([1.0; 4], g); // Белый фон
             rectangle(
                 [1.0, 0.0, 0.0, 1.0], // Red square
-                [app.x - 0.5, app.y - 0.5, 4.0, 4.0],
+                [app.x - 0.5, app.y - 0.5, 1.0, 1.0],
                 c.transform,
                 g,
             );
@@ -49,6 +51,6 @@ fn main() {
             );
         });
 
-        window.set_title(format!("Number: {}", 42));
+        window.set_title(format!("k=: {}", k));
     }
 }
