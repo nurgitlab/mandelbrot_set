@@ -1,56 +1,37 @@
+use minifb::{Window, WindowOptions};
 mod my_draw;
-use piston_window::*;
-
-struct App {
-    x: f64,  // Position of the red square
-    y: f64,
-}
-
 
 fn main() {
-    let mut window: PistonWindow = WindowSettings::new("Mondelbrot Set", [800, 600])
-        .exit_on_esc(true)
-        .build()
-        .unwrap();
+    let width = 680;
+    let height: usize = 680;
+    let k = 1200; // Count of iterations for Mandelbrot set
 
-    let app = App { x: 400.0, y: 300.0 };
-    let mut k = 1;
+    let mut buffer: Vec<u32> = vec![0; width * height];
 
-    let mut z = my_draw::get_n_for_pixel(0.0, 0.0, k);
-    println!("Initial z value: {}", z);
-    while let Some(e) = window.next() {
-        // Keyboard input handling
-        if let Some(Button::Keyboard(key)) = e.press_args() {
-            match key {
-                Key::Up => k+=1,
-                Key::Down => k-=1,
-                _ => {}
+     for y in 0..height {
+            for x in 0..width {
+                let x_scaled = (x as f64 / 240.0) - 2.0; // Scale x to [-2, 1]
+                let y_scaled = (y as f64 / 240.0)  - 1.5; // Scale y to [-1.5, 1.5]
+
+                let z = my_draw::get_n_for_pixel(x_scaled, y_scaled, k);
+
+                let color = my_draw::get_color(z as u32, 1024);
+
+                let r = color[0] as u32;
+                let g = color[1] as u32;
+                let b = color[2] as u32;
+                buffer[y * width + x] = (r << 16) | (g << 8) | b;
             }
+    }
 
-            println!("Square position: ({}, {})", app.x, app.y);
-        }
+    let mut window = Window::new(
+        "Pixel Drawing",
+        width,
+        height,
+        WindowOptions::default(),
+    ).unwrap();
 
-
-        // Drawing the squares
-        window.draw_2d(&e, |c, g, _| {
-            clear([1.0; 4], g); // Белый фон
-            rectangle(
-                [1.0, 0.0, 0.0, 1.0], // Red square
-                [app.x - 0.5, app.y - 0.5, 1.0, 1.0],
-                c.transform,
-                g,
-            );
-        });
-
-         window.draw_2d(&e, |c, g, _| {
-            rectangle(
-                [1.0, 1.0, 0.0, 1.0], // Yellow square
-                [app.x - 75.0, app.y - 75.0, 50.0, 50.0],
-                c.transform,
-                g,
-            );
-        });
-
-        window.set_title(format!("k=: {}", k));
+    while window.is_open() {
+        window.update_with_buffer(&buffer, width, height).unwrap();
     }
 }
